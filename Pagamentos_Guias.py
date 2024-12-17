@@ -455,12 +455,22 @@ def puxar_servicos_navio():
 
     st.session_state.df_servicos_navio['Data da Escala'] = st.session_state.df_servicos_navio['Data da Escala'].dt.date
 
-    st.session_state.df_servicos_navio[['Modo', 'Tipo de Servico', 'Servico', 'Veículo', 'Motorista', 'Motoguia', 'Idioma', 'Apenas Recepcao', 'Barco Carneiros', 'Valor Final']] = \
-        ['REGULAR', 'TOUR', 'Serviço de Guia - Navio', '', '', '', '', '', 0, 194]
+    st.session_state.df_servicos_navio['Valor Final'] = pd.to_numeric(st.session_state.df_servicos_navio['Valor Final'], errors='coerce')
+
+    st.session_state.df_servicos_navio[['Modo', 'Tipo de Servico', 'Servico', 'Veículo', 'Motorista', 'Motoguia', 'Idioma', 'Apenas Recepcao', 'Barco Carneiros']] = \
+        ['REGULAR', 'TOUR', 'Serviço de Guia - Navio', '', '', '', '', '', 0]
 
     st.session_state.df_servicos_navio = st.session_state.df_servicos_navio[['Data da Escala', 'Modo', 'Tipo de Servico', 'Servico', 'Veículo', 'Motorista', 'Guia', 'Motoguia', 'Idioma', 
                                                                              'Apenas Recepcao', 'Barco Carneiros', 'Valor Final']]
 
+def filtrar_idiomas_so_para_guias_que_falam_o_idioma(df_escalas_group):
+    
+    condicao = ((df_escalas_group['Idioma'] == 'X') & (~df_escalas_group['Guia'].isin(st.session_state.df_guias_idioma['Guias'].unique())) & (df_escalas_group['Tipo de Servico'] == 'TOUR'))
+
+    df_escalas_group.loc[condicao, 'Idioma'] = ''
+
+    return df_escalas_group
+    
 st.set_page_config(layout='wide')
 
 with st.spinner('Puxando dados do Phoenix...'):
@@ -493,23 +503,29 @@ with row1[1]:
 
 if atualizar_phoenix:
 
-    puxar_dados_phoenix()
+    with st.spinner('Puxando dados do Phoenix...'):
+
+        puxar_dados_phoenix()
 
 st.divider()
 
 if gerar_mapa and data_inicial and data_final:
 
-    puxar_tarifarios()
+    with st.spinner('Puxando tarifários, programação de passeios espanhol, extras barco Carneiros, guias apenas recepção, apoios ao box, serviços navio e guias idioma...'):
 
-    puxar_programacao_passeios()
+        puxar_tarifarios()
 
-    puxar_aba_simples('1RwFPP9nQttGztxicHeJGTG6UqoL7fPKCWSdhhEdRVhE', 'Extra Barco', 'df_extra_barco')
+        puxar_programacao_passeios()
 
-    puxar_aba_simples('1RwFPP9nQttGztxicHeJGTG6UqoL7fPKCWSdhhEdRVhE', 'Apenas Recepção', 'df_apenas_recepcao')
+        puxar_aba_simples('1RwFPP9nQttGztxicHeJGTG6UqoL7fPKCWSdhhEdRVhE', 'Extra Barco', 'df_extra_barco')
 
-    puxar_apoios_box()
+        puxar_aba_simples('1RwFPP9nQttGztxicHeJGTG6UqoL7fPKCWSdhhEdRVhE', 'Apenas Recepção', 'df_apenas_recepcao')
 
-    puxar_servicos_navio()
+        puxar_aba_simples('1RwFPP9nQttGztxicHeJGTG6UqoL7fPKCWSdhhEdRVhE', 'Guias Idioma', 'df_guias_idioma')
+
+        puxar_apoios_box()
+
+        puxar_servicos_navio()
 
     df_escalas = st.session_state.df_escalas[(st.session_state.df_escalas['Data da Escala'] >= data_inicial) & (st.session_state.df_escalas['Data da Escala'] <= data_final)].reset_index(drop=True)
 
@@ -525,6 +541,8 @@ if gerar_mapa and data_inicial and data_final:
     df_escalas_group = identificar_passeios_regulares_saindo_de_porto(df_escalas_group)
 
     df_escalas_group = filtrando_idiomas_passeios_programacao_espanhol(df_escalas_group)
+
+    df_escalas_group = filtrar_idiomas_so_para_guias_que_falam_o_idioma(df_escalas_group)
 
     df_escalas_group = pd.merge(df_escalas_group, st.session_state.df_tarifario, on='Servico', how='left')
 
