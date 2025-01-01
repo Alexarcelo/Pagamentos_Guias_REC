@@ -192,6 +192,14 @@ def avaliar_idioma(idiomas):
 
 def verificar_tarifarios(df_escalas_group, id_gsheet):
 
+    servicos_sem_valor = st.session_state.df_tarifario[pd.isna(st.session_state.df_tarifario['Valor'])]['Servico'].unique().tolist()
+
+    if len(servicos_sem_valor)>0:
+
+        st.error(f"Os serviços {', '.join(servicos_sem_valor)} estão na planilha de tarifários, mas não tem valor de serviço cadastrado. Por favor, cadastre e tente novamente")
+
+        st.stop()
+
     lista_passeios = df_escalas_group['Servico'].unique().tolist()
 
     lista_passeios_tarifario = st.session_state.df_tarifario['Servico'].unique().tolist()
