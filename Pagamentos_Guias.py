@@ -180,6 +180,8 @@ def puxar_apoios_box():
     st.session_state.df_apoios_box = st.session_state.df_apoios_box[['Data da Escala', 'Modo', 'Tipo de Servico', 'Servico', 'Veículo', 'Motorista', 'Guia', 'Motoguia', 'Idioma', 'Apenas Recepcao', 
                                                                      'Barco Carneiros', 'Valor Final']]
 
+    st.session_state.df_apoios_box = st.session_state.df_apoios_box[(st.session_state.df_apoios_box['Data da Escala']>=st.session_state.data_inicial) & (st.session_state.df_apoios_box['Data da Escala']<=st.session_state.data_final)].reset_index(drop=True)
+
 def avaliar_observacao(observacoes):
 
     return 50 if 'barco_carneiros' in observacoes else 0
@@ -493,7 +495,7 @@ with row1[0]:
 
     data_inicial = container_datas.date_input('Data Inicial', value=None ,format='DD/MM/YYYY', key='data_inicial')
 
-    data_final = container_datas.date_input('Data Inicial', value=None ,format='DD/MM/YYYY', key='data_final')
+    data_final = container_datas.date_input('Data Final', value=None ,format='DD/MM/YYYY', key='data_final')
 
     gerar_mapa = container_datas.button('Gerar Mapa de Pagamentos')
 
